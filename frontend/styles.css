@@ -1,0 +1,226 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+:root {
+    --amazon-navy: #131921;
+    --amazon-light-navy: #232f3e;
+    --amazon-yellow: #ffd814;
+    --amazon-yellow-hover: #f7ca00;
+    --amazon-orange: #ffa41c;
+    --bg-color: #eaeded; /* Light gray background */
+    --text-main: #0f1111;
+    --text-muted: #565959;
+    --link-color: #007185;
+    --border-color: #d5d9d9;
+    --card-bg: #ffffff;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-main);
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Amazon-style Navbar */
+.top-nav {
+    background-color: var(--amazon-navy);
+    padding: 10px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: white;
+}
+
+.top-nav .nav-brand {
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: white;
+    text-decoration: none;
+    letter-spacing: -0.5px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Sub Navbar */
+.sub-nav {
+    background-color: var(--amazon-light-navy);
+    padding: 8px 20px;
+    display: flex;
+    gap: 15px;
+    color: white;
+    font-size: 0.9rem;
+    overflow-x: auto;
+}
+.sub-nav a, .sub-nav button {
+    color: white;
+    text-decoration: none;
+    background: transparent;
+    border: 1px solid transparent;
+    padding: 5px 10px;
+    cursor: pointer;
+    font-weight: 500;
+}
+.sub-nav a:hover, .sub-nav button:hover, .sub-nav button.active {
+    border: 1px solid white;
+    border-radius: 3px;
+}
+
+/* Base button styling */
+.btn-amazon {
+    background-color: var(--amazon-yellow);
+    color: #0f1111;
+    border: 1px solid #fcd200;
+    border-radius: 100px; /* Pills like modern amazon */
+    padding: 8px 20px;
+    font-weight: 600;
+    box-shadow: 0 2px 5px rgba(15,17,17,.15);
+    transition: background-color 0.2s;
+    text-align: center;
+}
+.btn-amazon:hover {
+    background-color: var(--amazon-yellow-hover);
+    border-color: #f2c200;
+}
+
+.btn-amazon-secondary {
+    background-color: #FAFAFA;
+    border: 1px solid var(--border-color);
+    color: #0f1111;
+    border-radius: 100px;
+    padding: 6px 15px;
+    font-weight: 500;
+    box-shadow: 0 2px 5px rgba(15,17,17,.05);
+}
+.btn-amazon-secondary:hover {
+    background-color: #F3F3F3;
+}
+
+/* Hero Section */
+.hero-section {
+    background-color: var(--amazon-navy);
+    background-image: linear-gradient(to right, #000000c0, #00000060), url('https://images.unsplash.com/photo-1596649280422-0d1275ca8174?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80');
+    background-size: cover;
+    background-position: center;
+    color: white;
+    padding: 60px 20px;
+    text-align: center;
+    margin-bottom: -150px;
+    padding-bottom: 200px;
+}
+.hero-section h1 {
+    font-weight: 800;
+    font-size: 3rem;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+}
+
+/* E-Commerce Cards */
+.amazon-card {
+    background: var(--card-bg);
+    border-radius: 8px;
+    overflow: hidden;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    padding: 15px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05); /* Subtler shadow */
+    transition: transform 0.2s;
+    border: 1px solid #e7e7e7;
+    z-index: 10;
+}
+.amazon-card:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.amazon-card img {
+    width: 100%;
+    height: 220px;
+    object-fit: cover;
+    background-color: #f8f8f8;
+    border-radius: 4px;
+}
+
+.card-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-top: 15px;
+    margin-bottom: 5px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.price-block {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #B12704; /* Amazon red for price */
+    display: flex;
+    align-items: flex-start;
+}
+.price-symbol {
+    font-size: 1rem;
+    margin-top: 5px;
+    margin-right: 2px;
+}
+
+/* Forms container */
+.admin-container {
+    background: white;
+    padding: 30px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    max-width: 700px;
+    margin: 40px auto;
+}
+
+input.form-control, select.form-select, textarea.form-control {
+    border-radius: 4px;
+    border: 1px solid #888C8C;
+    padding: 8px 12px;
+    box-shadow: 0 1px 2px rgba(15,17,17,.15) inset;
+}
+input.form-control:focus, select.form-select:focus, textarea.form-control:focus {
+    border-color: var(--link-color);
+    box-shadow: 0 0 0 3px rgba(0, 113, 133, 0.2);
+}
+
+.prime-badge {
+    color: #00a8e1;
+    font-weight: 800;
+    font-style: italic;
+    font-size: 0.9rem;
+}
+.prime-check {
+    color: #f7ca00;
+}
+
+.badge-veg {
+    background-color: transparent;
+    color: #007600;
+    border: 1px solid #007600;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+.badge-nonveg {
+    background-color: transparent;
+    color: #B12704;
+    border: 1px solid #B12704;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+    .hero-section h1 { font-size: 2rem; }
+    .hero-section { margin-bottom: -100px; padding-bottom: 120px; }
+}

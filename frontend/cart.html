@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>My Cart | SpiceCraft</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link href="styles.css?v=2" rel="stylesheet">
+</head>
+<body style="background-color: var(--bg-color);">
+
+<!-- JWT Protection -->
+<script>
+const token = localStorage.getItem("token");
+if (!token) {
+    alert("Please login first!");
+    window.location.href = "login.html";
+}
+</script>
+
+<div class="top-nav w-100 shadow-sm m-0">
+    <a href="index.html" class="nav-brand text-decoration-none">
+        <i class="fas fa-pepper-hot" style="color: var(--amazon-orange);"></i> SpiceCraft
+    </a>
+    <div class="nav-actions d-flex align-items-center gap-3">
+        <a href="index.html" class="text-decoration-none text-white fw-bold"><i class="fas fa-arrow-left"></i> Keep Shopping</a>
+    </div>
+</div>
+
+<div class="container mt-4 mb-5">
+    <h2 class="text-start my-4 fw-bold" style="font-size: 2rem;">Shopping Cart</h2>
+    <div class="row">
+        <!-- Cart Items Listing Column -->
+        <div class="col-lg-9 mb-4">
+            <div id="cart-list" class="d-flex flex-column gap-3"></div>
+        </div>
+        <!-- Order Summary Side Column -->
+        <div class="col-lg-3">
+            <div id="order-summary-container" class="sticky-top" style="top: 20px;"></div>
+        </div>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+async function loadCart() {
+    const token = localStorage.getItem("token");
+    try {
+        const res = await fetch("http://127.0.0.1:8000/orders/cart/", {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+        if (!res.ok) throw new Error("Failed to load cart");
+
+        const items = await res.json();
+        const container = document.getElementById("cart-list");
+        container.innerHTML = "";
+
+        if (items.length === 0) {
+            container.innerHTML = `
+                <div class="col-12 text-center text-muted" style="height: 300px; display:flex; flex-direction:column; justify-content:center; align-items:center;">
+                    <i class="fas fa-shopping-basket fa-4x mb-3" style="color: var(--border-color);"></i>
+                    <p style="font-size: 1.2rem;">Your cart is empty.</p>
+                    <a href="index.html" class="btn btn-primary mt-3"><i class="fas fa-store"></i> Shop Now</a>
+                </div>
+            `;
+            return;
+        }
+
+        let grandTotal = 0;
+
+        items.forEach(item => {
+            const isVeg = item.category && item.category.toLowerCase() === 'veg';
+            const catIcon = isVeg ? '<i class="fas fa-leaf text-success"></i>' : '<i class="fas fa-drumstick-bite text-danger"></i>';
+            const qty = item.quantity || 1;
+            const subtotal = item.price * qty;
+            grandTotal += subtotal;
+
+            container.innerHTML += `
+            <div class="card shadow-sm border p-3" style="border-radius: 8px; border-color: var(--border-color) !important;">
+                <div class="row g-0">
+                    <div class="col-md-3 text-center d-flex align-items-start justify-content-center">
+                        <img src="${item.image_url}" alt="${item.name}" style="width: 100%; max-height: 180px; object-fit: contain; background: #f8f8f8; border-radius: 4px;">
+                    </div>
+                    <div class="col-md-9 px-md-4 mt-3 mt-md-0 d-flex flex-column">
+                        <h4 class="fw-bold mb-1 text-dark">${item.name}</h4>
+                        <p class="text-success fw-bold mb-1" style="font-size: 0.85rem;">In Stock</p>
+                        <p class="text-muted mb-2" style="font-size: 0.9rem;">${item.description}</p>
+                        
+                        <div class="d-flex flex-wrap align-items-center gap-3 mb-2">
+                            <h5 class="fw-bold mb-0 text-dark">₹ ${item.price.toLocaleString('en-IN')}</h5>
+                            <span class="badge bg-light text-dark border px-3 py-2 fs-6">Qty: ${qty}</span>
+                        </div>
+                        
+                        <div class="mt-auto pt-3 d-flex justify-content-between align-items-center mt-3">
+                            <span class="text-muted fw-medium" style="font-size: 0.9rem;">Subtotal: <span class="text-primary fw-bold">₹ ${subtotal.toLocaleString('en-IN')}</span></span>
+                            <button class="btn btn-sm btn-outline-danger shadow-sm px-3 fw-bold bg-white" onclick="removeFromCart('${item._id}')" style="border-radius: 5px;">
+                                <i class="fas fa-trash-alt me-1"></i> Delete
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+        });
+
+        const summaryContainer = document.getElementById("order-summary-container");
+        if (items.length > 0) {
+            summaryContainer.innerHTML = `
+            <div class="card shadow bg-white p-4" style="border-radius: 8px; border: 1px solid var(--border-color);">
+                <div class="text-start mb-3">
+                    <span class="d-block" style="font-size: 1.1rem; color: #0f1111;">Subtotal (${items.reduce((acc, it) => acc + (it.quantity || 1), 0)} items):</span>
+                    <h3 class="fw-bold mb-0 text-dark text-nowrap mt-1">₹ ${grandTotal.toLocaleString('en-IN')}</h3>
+                </div>
+                
+                <button class="btn-amazon btn-lg shadow-sm w-100 py-2 mt-2" style="border-radius: 100px; font-weight: 600; font-size: 0.95rem;">
+                    Proceed to Buy
+                </button>
+            </div>
+            `;
+        } else {
+            summaryContainer.innerHTML = "";
+        }
+    } catch (err) {
+        document.getElementById("cart-list").innerHTML = `<div class="col-12 text-center text-danger"><p>Could not load cart items.</p></div>`;
+    }
+}
+
+async function removeFromCart(id) {
+    const token = localStorage.getItem("token");
+    try {
+        const res = await fetch(`http://127.0.0.1:8000/orders/remove_from_cart/${id}`, {
+            method: "DELETE",
+            headers: { Authorization: `Bearer ${token}` }
+        });
+        if (res.ok) {
+            loadCart(); // Refresh list automatically
+        } else {
+            alert("Failed to remove item.");
+        }
+    } catch(err) {
+        alert("Failed to connect to server.");
+    }
+}
+
+loadCart();
+</script>
+
+</body>
+</html>

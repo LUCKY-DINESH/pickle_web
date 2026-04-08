@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Dashboard | SpiceCraft</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<!-- FontAwesome for beautiful icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link href="styles.css?v=2" rel="stylesheet">
+</head>
+
+<body style="background-color: var(--bg-color);">
+
+<!-- JWT & Role Protection -->
+<script>
+const token = localStorage.getItem("token");
+if (!token || localStorage.getItem("role") !== "admin") {
+    window.location.href = "login.html";
+}
+</script>
+
+<div class="top-nav w-100 shadow-sm m-0">
+    <a href="index.html" class="nav-brand text-decoration-none">
+        <i class="fas fa-pepper-hot" style="color: var(--amazon-orange);"></i> SpiceCraft
+        <span class="fs-6 fw-light text-white ms-2 opacity-75">| Seller Central</span>
+    </a>
+    <div class="nav-actions d-flex align-items-center gap-3">
+        <a href="index.html" class="text-decoration-none text-white fw-bold"><i class="fas fa-store"></i> View Store</a>
+        <button class="btn-amazon-secondary" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+    </div>
+</div>
+
+<div class="container mt-4 mb-5 pb-5">
+    <h1 class="mb-4"><i class="fas fa-tachometer-alt text-muted"></i> Seller Dashboard</h1>
+    
+    <div class="admin-container shadow-sm mx-auto">
+        <form id="addPickleForm" enctype="multipart/form-data">
+            <h2 class="h5 mb-4 fw-bold border-bottom pb-2"><i class="fas fa-plus-circle text-primary"></i> Add a New Product</h2>
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <label>Pickle Name</label>
+            <input type="text" name="name" placeholder="e.g., Mango Delight" required>
+        </div>
+        <div class="col-md-6 mb-3">
+            <label>Category</label>
+            <select name="category" required>
+                <option value="veg">Vegetarian</option>
+                <option value="non-veg">Non-Vegetarian</option>
+            </select>
+        </div>
+    </div>
+    <div class="mb-3">
+        <label>Description</label>
+        <textarea name="description" rows="3" placeholder="Describe the authentic taste and ingredients..." required></textarea>
+    </div>
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <label>Price (₹)</label>
+            <input type="number" name="price" placeholder="e.g., 299" required min="1">
+        </div>
+        <div class="col-md-6 mb-3">
+            <label>Upload Image <small class="text-muted fw-normal">(drag & drop or Ctrl+V to paste)</small></label>
+            <input type="file" name="file" accept="image/*" required id="addFileInput" class="form-control">
+            <div id="addPreview" class="mt-2 text-center" style="display: none;">
+               <img id="addImagePreview" src="#" alt="Preview" style="max-height: 120px; border-radius: 10px; border: 2px dashed var(--border-color);">
+            </div>
+        </div>
+    </div>
+    <button type="submit" class="btn btn-primary mt-2" id="addBtn"><i class="fas fa-upload"></i> Publish to Website</button>
+</form>
+
+<h2 class="mt-5"><i class="fas fa-list"></i> Managed Catalog</h2>
+<div id="pickles-list" class="row row-cols-1 row-cols-md-3 g-4 mb-5"></div>
+
+<!-- Toast System -->
+<div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1055;">
+  <div id="adminToast" class="toast align-items-center text-white border-0" role="alert" aria-live="assertive" aria-atomic="true">
+    <div class="d-flex">
+      <div class="toast-body" id="toastMessage">Success!</div>
+      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+    </div>
+  </div>
+</div>
+
+<!-- Update Pickle Modal -->
+<div class="modal fade" id="updateModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <form id="updatePickleForm" enctype="multipart/form-data" class="m-0 p-0 shadow-none border-0 bg-transparent">
+        <div class="modal-header">
+          <h5 class="modal-title"><i class="fas fa-edit"></i> Edit Product</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" id="updatePickleId">
+          <div class="mb-3">
+            <label>Name</label>
+            <input type="text" id="updateName" name="name" required>
+          </div>
+          <div class="mb-3">
+            <label>Category</label>
+            <select id="updateCategory" name="category" required>
+                <option value="veg">Vegetarian</option>
+                <option value="non-veg">Non-Vegetarian</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label>Description</label>
+            <textarea id="updateDescription" name="description" rows="2" required></textarea>
+          </div>
+          <div class="row">
+            <div class="col-md-6 mb-3">
+                <label>Price (₹)</label>
+                <input type="number" id="updatePrice" name="price" required>
+            </div>
+            <div class="col-md-6 mb-3">
+                <label>New Image (Optional) <small class="text-muted fw-normal">(Ctrl+V to paste)</small></label>
+                <input type="file" id="updateFile" name="file" accept="image/*" class="form-control">
+            </div>
+          </div>
+          <div id="updatePreview" class="mt-2 text-center" style="display: none;">
+              <span class="d-block text-muted mb-2" style="font-size: 0.85rem;">Image Preview</span>
+              <img id="updateImagePreview" src="#" alt="Preview" style="max-height: 120px; border-radius: 10px; border: 2px dashed var(--border-color); object-fit: cover;">
+          </div>
+        </div>
+        <div class="modal-footer border-top-0 pt-0">
+          <button type="submit" class="btn btn-primary w-100" id="updateBtn"><i class="fas fa-save"></i> Save Changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+const addForm = document.getElementById("addPickleForm");
+const picklesList = document.getElementById("pickles-list");
+const updateForm = document.getElementById("updatePickleForm");
+const updateModal = new bootstrap.Modal(document.getElementById('updateModal'));
+
+function logout() {
+    localStorage.removeItem("token");
+    window.location.href = "login.html";
+}
+
+function showToast(message, type = 'success') {
+    const toastEl = document.getElementById("adminToast");
+    const toastBody = document.getElementById("toastMessage");
+    toastEl.className = `toast align-items-center text-white border-0 ${type === 'success' ? 'bg-success' : type === 'warning' ? 'bg-warning text-dark' : 'bg-danger'}`;
+    toastBody.innerHTML = message;
+    new bootstrap.Toast(toastEl, { delay: 3000 }).show();
+}
+
+// Dynamic image preview for adding form
+document.getElementById('addFileInput').addEventListener('change', function(e) {
+    if(this.files && this.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(err) {
+            document.getElementById('addPreview').style.display = 'block';
+            document.getElementById('addImagePreview').src = err.target.result;
+        }
+        reader.readAsDataURL(this.files[0]);
+    }
+});
+
+// Add Pickle
+addForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('addBtn');
+    btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Uploading...`;
+    btn.disabled = true;
+
+    try {
+        const data = new FormData(addForm);
+        const res = await fetch("http://127.0.0.1:8000/pickles/add/", {
+            method: "POST",
+            body: data,
+            headers: { Authorization: `Bearer ${token}` }
+        });
+        if (!res.ok) throw new Error("Upload failed");
+        
+        showToast(`<i class="fas fa-check"></i> Pickle published to website successfully!`);
+        addForm.reset();
+        document.getElementById('addPreview').style.display = 'none';
+        loadPickles();
+    } catch (err) {
+        showToast(`<i class="fas fa-exclamation-triangle"></i> Failed to publish. Check server connection or file format.`, "danger");
+    } finally {
+        btn.innerHTML = `<i class="fas fa-upload"></i> Publish to Website`;
+        btn.disabled = false;
+    }
+});
+
+// Load Pickles
+async function loadPickles() {
+    try {
+        const res = await fetch("http://127.0.0.1:8000/pickles/list/");
+        const pickles = await res.json();
+        picklesList.innerHTML = "";
+        
+        if (pickles.length === 0) {
+            picklesList.innerHTML = `<div class="col-12 text-center text-muted"><p>No pickles found. Use the panel above to add your first product!</p></div>`;
+            return;
+        }
+
+        pickles.forEach(p => {
+            const id = p._id.$oid || p._id;
+            picklesList.innerHTML += `
+            <div class="col">
+                <div class="card h-100">
+                    <img src="${p.image_url}" class="card-img-top" alt="${p.name}">
+                    <div class="card-body">
+                        <h5 class="card-title">${p.name}</h5>
+                        <p class="card-text">${p.description}</p>
+                        <p class="card-text mb-1"><strong><i class="fas fa-tag"></i> Category:</strong> ${p.category}</p>
+                        <p class="card-text mb-0"><strong><i class="fas fa-rupee-sign"></i> Price:</strong> ₹${p.price}</p>
+                        <div class="card-actions mt-3">
+                            <button class="btn btn-warning" onclick="openUpdateModal('${id}', '${p.name.replace(/'/g, "\\'")}', '${p.category}', '${p.description.replace(/'/g, "\\'")}', ${p.price}, '${p.image_url}')"><i class="fas fa-edit"></i> Edit</button>
+                            <button class="btn btn-danger" onclick="deletePickle('${id}')"><i class="fas fa-trash"></i> Delete</button>
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+        });
+    } catch (e) {
+        picklesList.innerHTML = `<div class="col-12 text-center text-danger"><p>Could not connect to the backend server.</p></div>`;
+    }
+}
+
+// Delete Pickle
+async function deletePickle(id) {
+    if (!confirm("Are you sure you want to delete this exquisite pickle?")) return;
+    try {
+        const res = await fetch(`http://127.0.0.1:8000/pickles/delete/${id}`, {
+            method: "DELETE",
+            headers: { Authorization: `Bearer ${token}` }
+        });
+        if (!res.ok) throw new Error("Delete failed");
+        showToast(`<i class="fas fa-trash"></i> Removed product from website.`);
+        loadPickles();
+    } catch (err) {
+        showToast(`<i class="fas fa-times"></i> Could not delete pickle.`, "danger");
+    }
+}
+
+// Open Update Modal
+function openUpdateModal(id, name, category, description, price, imageUrl) {
+    document.getElementById("updatePickleId").value = id;
+    document.getElementById("updateName").value = name;
+    document.getElementById("updateCategory").value = category;
+    document.getElementById("updateDescription").value = description;
+    document.getElementById("updatePrice").value = price;
+    
+    // Preview the existing image
+    if (imageUrl) {
+        document.getElementById('updatePreview').style.display = 'block';
+        document.getElementById('updateImagePreview').src = imageUrl;
+    } else {
+        document.getElementById('updatePreview').style.display = 'none';
+        document.getElementById('updateImagePreview').src = '#';
+    }
+    
+    // Reset file input
+    document.getElementById('updateFile').value = '';
+    
+    updateModal.show();
+}
+
+// Dynamic image preview for update form
+document.getElementById('updateFile').addEventListener('change', function(e) {
+    if(this.files && this.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(err) {
+            document.getElementById('updatePreview').style.display = 'block';
+            document.getElementById('updateImagePreview').src = err.target.result;
+        }
+        reader.readAsDataURL(this.files[0]);
+    }
+});
+
+// Universal Image Paste Listener
+document.addEventListener('paste', function(e) {
+    if (e.clipboardData && e.clipboardData.files && e.clipboardData.files.length > 0) {
+        const file = e.clipboardData.files[0];
+        if (file.type.startsWith('image/')) {
+            // Determine if the Update Modal is currently open
+            const isModalOpen = document.getElementById('updateModal').classList.contains('show');
+            const targetInput = isModalOpen ? document.getElementById('updateFile') : document.getElementById('addFileInput');
+            
+            // Create a DataTransfer to assign to FileInput securely
+            const dataTransfer = new DataTransfer();
+            dataTransfer.items.add(file);
+            targetInput.files = dataTransfer.files;
+
+            // Trigger the change event so the preview thumbnail updates dynamically
+            targetInput.dispatchEvent(new Event('change'));
+            
+            showToast(`<i class="fas fa-clipboard-check"></i> Image pasted from clipboard successfully!`);
+        }
+    }
+});
+
+// Update Pickle
+updateForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('updateBtn');
+    btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Saving...`;
+    btn.disabled = true;
+
+    try {
+        const id = document.getElementById("updatePickleId").value;
+        const data = new FormData(updateForm);
+        const res = await fetch(`http://127.0.0.1:8000/pickles/update/${id}`, {
+            method: "PUT",
+            body: data,
+            headers: { Authorization: `Bearer ${token}` }
+        });
+        if (!res.ok) throw new Error("Update failed");
+        
+        showToast(`<i class="fas fa-check"></i> Changes saved to catalog!`);
+        updateModal.hide();
+        loadPickles();
+    } catch (err) {
+        showToast(`<i class="fas fa-exclamation-triangle"></i> Failed to update.`, "danger");
+    } finally {
+        btn.innerHTML = `<i class="fas fa-save"></i> Save Changes`;
+        btn.disabled = false;
+    }
+});
+
+// Initial load
+loadPickles();
+</script>
+</body>
+</html>

@@ -1,0 +1,31 @@
+# .gitignore - project-wide ignores
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.venv/
+env/
+venv/
+
+# dotenv
+.env
+app/.env
+
+# IDEs / editors
+.vscode/
+.idea/
+
+# Logs
+*.log
+
+# Build / packaging
+build/
+dist/
+*.egg-info/
+
+# OS files
+.DS_Store
+Thumbs.db
